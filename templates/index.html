@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Flask AI Document Summarizer</title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        body {
+
+            font-family: Arial, sans-serif;
+
+            min-height: 100vh;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #667eea 0%,
+                    #764ba2 100%
+                );
+
+            padding: 40px 20px;
+
+            color: #222;
+        }
+
+
+        .container {
+
+            max-width: 1000px;
+
+            margin: auto;
+        }
+
+
+        .main-card {
+
+            background: rgba(255, 255, 255, 0.95);
+
+            border-radius: 25px;
+
+            padding: 35px;
+
+            box-shadow:
+                0 20px 50px rgba(0, 0, 0, 0.2);
+
+        }
+
+
+        .header {
+
+            text-align: center;
+
+            margin-bottom: 30px;
+        }
+
+
+        .logo {
+
+            font-size: 50px;
+
+            margin-bottom: 10px;
+        }
+
+
+        .header h1 {
+
+            font-size: 36px;
+
+            margin-bottom: 10px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #667eea,
+                    #764ba2
+                );
+
+            -webkit-background-clip: text;
+
+            -webkit-text-fill-color: transparent;
+        }
+
+
+        .header p {
+
+            color: #666;
+
+            font-size: 16px;
+        }
+
+
+        .upload-box {
+
+            border: 3px dashed #8b7cf6;
+
+            border-radius: 20px;
+
+            padding: 45px 20px;
+
+            text-align: center;
+
+            background: #f8f7ff;
+
+            transition: 0.3s;
+
+            margin-bottom: 20px;
+        }
+
+
+        .upload-box:hover {
+
+            background: #f0eeff;
+
+            border-color: #667eea;
+        }
+
+
+        .upload-icon {
+
+            font-size: 55px;
+
+            margin-bottom: 15px;
+        }
+
+
+        .upload-box h3 {
+
+            margin-bottom: 8px;
+
+            font-size: 21px;
+        }
+
+
+        .upload-box p {
+
+            color: #777;
+
+            margin-bottom: 20px;
+        }
+
+
+        #fileInput {
+
+            display: none;
+        }
+
+
+        .choose-button {
+
+            display: inline-block;
+
+            padding: 12px 25px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #667eea,
+                    #764ba2
+                );
+
+            color: white;
+
+            border-radius: 10px;
+
+            cursor: pointer;
+
+            font-weight: bold;
+        }
+
+
+        #fileName {
+
+            margin-top: 15px;
+
+            font-size: 14px;
+
+            color: #555;
+        }
+
+
+        .summarize-button {
+
+            width: 100%;
+
+            border: none;
+
+            padding: 16px;
+
+            border-radius: 12px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #667eea,
+                    #764ba2
+                );
+
+            color: white;
+
+            font-size: 17px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: 0.3s;
+
+            margin-bottom: 25px;
+        }
+
+
+        .summarize-button:hover {
+
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+
+        .summarize-button:disabled {
+
+            opacity: 0.6;
+
+            cursor: not-allowed;
+
+            transform: none;
+        }
+
+
+        .loading {
+
+            display: none;
+
+            text-align: center;
+
+            margin-bottom: 20px;
+
+            color: #667eea;
+
+            font-weight: bold;
+        }
+
+
+        .spinner {
+
+            display: inline-block;
+
+            width: 20px;
+
+            height: 20px;
+
+            border: 3px solid #ddd;
+
+            border-top: 3px solid #667eea;
+
+            border-radius: 50%;
+
+            animation: spin 1s linear infinite;
+
+            vertical-align: middle;
+
+            margin-right: 8px;
+        }
+
+
+        @keyframes spin {
+
+            100% {
+                transform: rotate(360deg);
+            }
+
+        }
+
+
+        .error {
+
+            display: none;
+
+            background: #ffe5e5;
+
+            color: #c62828;
+
+            padding: 15px;
+
+            border-radius: 10px;
+
+            margin-bottom: 20px;
+        }
+
+
+        .results {
+
+            display: none;
+        }
+
+
+        .result-card {
+
+            background: #f8f9ff;
+
+            border-radius: 18px;
+
+            padding: 25px;
+
+            margin-top: 20px;
+
+            border: 1px solid #e5e5f5;
+        }
+
+
+        .result-card h2 {
+
+            margin-bottom: 15px;
+
+            font-size: 20px;
+
+            color: #4f46a5;
+        }
+
+
+        .text-box {
+
+            background: white;
+
+            border-radius: 12px;
+
+            padding: 18px;
+
+            max-height: 350px;
+
+            overflow-y: auto;
+
+            white-space: pre-wrap;
+
+            line-height: 1.6;
+
+            color: #444;
+
+            font-size: 14px;
+        }
+
+
+        .summary-box {
+
+            background: white;
+
+            border-radius: 12px;
+
+            padding: 20px;
+
+            white-space: pre-wrap;
+
+            line-height: 1.7;
+
+            color: #333;
+
+        }
+
+
+        .footer {
+
+            text-align: center;
+
+            margin-top: 25px;
+
+            color: #777;
+
+            font-size: 13px;
+        }
+
+
+        @media (max-width: 600px) {
+
+            .main-card {
+
+                padding: 22px;
+            }
+
+
+            .header h1 {
+
+                font-size: 28px;
+            }
+
+
+            .upload-box {
+
+                padding: 30px 15px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+    <div class="main-card">
+
+
+        <!-- Header -->
+
+        <div class="header">
+
+            <div class="logo">🤖</div>
+
+            <h1>AI Document Summarizer</h1>
+
+            <p>
+                Extract text from PDFs and images and generate
+                concise AI-powered summaries.
+            </p>
+
+        </div>
+
+
+        <!-- Upload Area -->
+
+        <div class="upload-box">
+
+            <div class="upload-icon">
+                📄
+            </div>
+
+            <h3>
+                Upload your document
+            </h3>
+
+            <p>
+                Supported formats: PDF, JPG, JPEG, PNG
+            </p>
+
+
+            <label
+                for="fileInput"
+                class="choose-button"
+            >
+                Choose File
+            </label>
+
+
+            <input
+                type="file"
+                id="fileInput"
+                accept=".pdf,.jpg,.jpeg,.png"
+            >
+
+
+            <div id="fileName">
+                No file selected
+            </div>
+
+        </div>
+
+
+        <!-- Button -->
+
+        <button
+            class="summarize-button"
+            id="summarizeButton"
+            onclick="uploadFile()"
+        >
+            ✨ Extract & Summarize
+        </button>
+
+
+        <!-- Loading -->
+
+        <div
+            class="loading"
+            id="loading"
+        >
+
+            <span class="spinner"></span>
+
+            Processing document...
+
+        </div>
+
+
+        <!-- Error -->
+
+        <div
+            class="error"
+            id="error"
+        ></div>
+
+
+        <!-- Results -->
+
+        <div
+            class="results"
+            id="results"
+        >
+
+
+            <!-- Extracted Text -->
+
+            <div class="result-card">
+
+                <h2>
+                    📝 Extracted Text
+                </h2>
+
+                <div
+                    class="text-box"
+                    id="extractedText"
+                ></div>
+
+            </div>
+
+
+            <!-- AI Summary -->
+
+            <div class="result-card">
+
+                <h2>
+                    🤖 AI Summary
+                </h2>
+
+                <div
+                    class="summary-box"
+                    id="summary"
+                ></div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- Footer -->
+
+        <div class="footer">
+
+            Flask • Tesseract OCR • PyMuPDF • Gemini AI
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+
+    // Show selected filename
+
+    document
+        .getElementById("fileInput")
+        .addEventListener("change", function () {
+
+            const file = this.files[0];
+
+            if (file) {
+
+                document
+                    .getElementById("fileName")
+                    .textContent = file.name;
+
+            }
+
+            else {
+
+                document
+                    .getElementById("fileName")
+                    .textContent = "No file selected";
+
+            }
+
+        });
+
+
+
+    // Upload and process file
+
+    async function uploadFile() {
+
+
+        const fileInput =
+            document.getElementById("fileInput");
+
+
+        const file =
+            fileInput.files[0];
+
+
+        const button =
+            document.getElementById("summarizeButton");
+
+
+        const loading =
+            document.getElementById("loading");
+
+
+        const error =
+            document.getElementById("error");
+
+
+        const results =
+            document.getElementById("results");
+
+
+        const extractedText =
+            document.getElementById("extractedText");
+
+
+        const summary =
+            document.getElementById("summary");
+
+
+
+        // Check file
+
+        if (!file) {
+
+            error.textContent =
+                "Please select a PDF or image first.";
+
+            error.style.display = "block";
+
+            return;
+
+        }
+
+
+
+        // Hide previous results/errors
+
+        error.style.display = "none";
+
+        results.style.display = "none";
+
+
+
+        // Show loading
+
+        loading.style.display = "block";
+
+        button.disabled = true;
+
+
+
+        // Create FormData
+
+        const formData =
+            new FormData();
+
+
+        formData.append(
+            "file",
+            file
+        );
+
+
+
+        try {
+
+
+            // Send request to Flask
+
+            const response =
+                await fetch(
+                    "/upload",
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
+
+
+
+            const data =
+                await response.json();
+
+
+
+            // Handle error
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.message ||
+                    "Something went wrong."
+                );
+
+            }
+
+
+
+            // Display extracted text
+
+            extractedText.textContent =
+                data.extracted_text || "";
+
+
+
+            // Display summary
+
+            summary.textContent =
+                data.summary || "";
+
+
+
+            // Show results
+
+            results.style.display = "block";
+
+
+        }
+
+
+        catch (err) {
+
+
+            error.textContent =
+                err.message;
+
+
+            error.style.display =
+                "block";
+
+        }
+
+
+        finally {
+
+
+            loading.style.display =
+                "none";
+
+
+            button.disabled =
+                false;
+
+        }
+
+    }
+
+
+</script>
+
+
+</body>
+
+</html>
